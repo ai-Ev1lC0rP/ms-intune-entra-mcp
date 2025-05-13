@@ -1,0 +1,753 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Microsoft Intune and Entra MCP API",
+    "description": "API for managing Microsoft Intune and Entra (Azure AD) resources",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check endpoint",
+        "responses": {
+          "200": {
+            "description": "Server is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "List all users",
+        "description": "Get a list of all users in the tenant",
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/User"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new user",
+        "description": "Create a new user in the tenant",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "summary": "Get a specific user",
+        "description": "Get details of a specific user by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID or UPN"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update a user",
+        "description": "Update a specific user by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID or UPN"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a user",
+        "description": "Delete a specific user by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID or UPN"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups": {
+      "get": {
+        "summary": "List all groups",
+        "description": "Get a list of all groups in the tenant",
+        "responses": {
+          "200": {
+            "description": "List of groups",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Group"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new group",
+        "description": "Create a new group in the tenant",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Group created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Group"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices": {
+      "get": {
+        "summary": "List all devices",
+        "description": "Get a list of all managed devices",
+        "responses": {
+          "200": {
+            "description": "List of devices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Device"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices/{id}": {
+      "get": {
+        "summary": "Get a specific device",
+        "description": "Get details of a specific device by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Device ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices/{id}/wipe": {
+      "post": {
+        "summary": "Wipe a device",
+        "description": "Remotely wipe a managed device",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Device ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device wipe initiated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device-compliance-policies": {
+      "get": {
+        "summary": "List all device compliance policies",
+        "description": "Get a list of all device compliance policies",
+        "responses": {
+          "200": {
+            "description": "List of device compliance policies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DeviceCompliancePolicy"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conditional-access-policies": {
+      "get": {
+        "summary": "List all conditional access policies",
+        "description": "Get a list of all conditional access policies",
+        "responses": {
+          "200": {
+            "description": "List of conditional access policies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ConditionalAccessPolicy"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "User's display name"
+          },
+          "userPrincipalName": {
+            "type": "string",
+            "description": "User principal name (email)"
+          },
+          "mail": {
+            "type": "string",
+            "description": "User's email address"
+          },
+          "accountEnabled": {
+            "type": "boolean",
+            "description": "Whether the account is enabled"
+          }
+        }
+      },
+      "UserInput": {
+        "type": "object",
+        "required": ["displayName", "userPrincipalName", "accountEnabled", "passwordProfile"],
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "User's display name"
+          },
+          "userPrincipalName": {
+            "type": "string",
+            "description": "User principal name (email)"
+          },
+          "mailNickname": {
+            "type": "string",
+            "description": "Mail nickname"
+          },
+          "accountEnabled": {
+            "type": "boolean",
+            "description": "Whether the account is enabled"
+          },
+          "passwordProfile": {
+            "type": "object",
+            "properties": {
+              "forceChangePasswordNextSignIn": {
+                "type": "boolean",
+                "description": "Force password change on next sign-in"
+              },
+              "password": {
+                "type": "string",
+                "description": "Initial password"
+              }
+            }
+          }
+        }
+      },
+      "UserUpdateInput": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "User's display name"
+          },
+          "accountEnabled": {
+            "type": "boolean",
+            "description": "Whether the account is enabled"
+          },
+          "passwordProfile": {
+            "type": "object",
+            "properties": {
+              "forceChangePasswordNextSignIn": {
+                "type": "boolean",
+                "description": "Force password change on next sign-in"
+              },
+              "password": {
+                "type": "string",
+                "description": "New password"
+              }
+            }
+          }
+        }
+      },
+      "Group": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Group ID"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Group display name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Group description"
+          },
+          "mailEnabled": {
+            "type": "boolean",
+            "description": "Whether the group is mail-enabled"
+          },
+          "securityEnabled": {
+            "type": "boolean",
+            "description": "Whether the group is security-enabled"
+          }
+        }
+      },
+      "GroupInput": {
+        "type": "object",
+        "required": ["displayName", "mailEnabled", "securityEnabled", "mailNickname"],
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Group display name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Group description"
+          },
+          "mailEnabled": {
+            "type": "boolean",
+            "description": "Whether the group is mail-enabled"
+          },
+          "securityEnabled": {
+            "type": "boolean",
+            "description": "Whether the group is security-enabled"
+          },
+          "mailNickname": {
+            "type": "string",
+            "description": "Mail nickname"
+          }
+        }
+      },
+      "Device": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Device ID"
+          },
+          "deviceName": {
+            "type": "string",
+            "description": "Device name"
+          },
+          "managedDeviceOwnerType": {
+            "type": "string",
+            "description": "Owner type (personal or company)"
+          },
+          "enrolledDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Enrollment date and time"
+          },
+          "lastSyncDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last sync date and time"
+          },
+          "operatingSystem": {
+            "type": "string",
+            "description": "Operating system"
+          },
+          "osVersion": {
+            "type": "string",
+            "description": "OS version"
+          },
+          "complianceState": {
+            "type": "string",
+            "description": "Compliance state"
+          }
+        }
+      },
+      "DeviceCompliancePolicy": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Policy ID"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Policy display name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Policy description"
+          },
+          "createdDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation date and time"
+          },
+          "lastModifiedDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last modification date and time"
+          }
+        }
+      },
+      "ConditionalAccessPolicy": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Policy ID"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Policy display name"
+          },
+          "state": {
+            "type": "string",
+            "description": "Policy state (enabled, disabled, etc.)"
+          },
+          "createdDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation date and time"
+          },
+          "modifiedDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last modification date and time"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      }
+    }
+  }
+}
