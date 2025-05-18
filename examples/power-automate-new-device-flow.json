@@ -1,0 +1,184 @@
+{
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "$connections": {
+            "defaultValue": {},
+            "type": "Object"
+        }
+    },
+    "triggers": {
+        "When_a_new_device_is_added_to_Intune": {
+            "recurrence": {
+                "frequency": "Hour",
+                "interval": 1
+            },
+            "type": "Recurrence"
+        }
+    },
+    "actions": {
+        "Initialize_Last_Check_Time": {
+            "runAfter": {},
+            "type": "InitializeVariable",
+            "inputs": {
+                "variables": [
+                    {
+                        "name": "LastCheckTime",
+                        "type": "string",
+                        "value": "@{utcNow('yyyy-MM-ddTHH:mm:ss.fffZ', '-1')}"
+                    }
+                ]
+            }
+        },
+        "HTTP_Get_Devices": {
+            "runAfter": {
+                "Initialize_Last_Check_Time": [
+                    "Succeeded"
+                ]
+            },
+            "type": "Http",
+            "inputs": {
+                "method": "GET",
+                "uri": "http://your-mcp-server:3000/devices",
+                "headers": {
+                    "Content-Type": "application/json"
+                }
+            }
+        },
+        "Parse_JSON_Response": {
+            "runAfter": {
+                "HTTP_Get_Devices": [
+                    "Succeeded"
+                ]
+            },
+            "type": "ParseJson",
+            "inputs": {
+                "content": "@body('HTTP_Get_Devices')",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "value": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "deviceName": {
+                                        "type": "string"
+                                    },
+                                    "managedDeviceOwnerType": {
+                                        "type": "string"
+                                    },
+                                    "enrolledDateTime": {
+                                        "type": "string"
+                                    },
+                                    "lastSyncDateTime": {
+                                        "type": "string"
+                                    },
+                                    "operatingSystem": {
+                                        "type": "string"
+                                    },
+                                    "osVersion": {
+                                        "type": "string"
+                                    },
+                                    "complianceState": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Filter_New_Devices": {
+            "runAfter": {
+                "Parse_JSON_Response": [
+                    "Succeeded"
+                ]
+            },
+            "type": "Query",
+            "inputs": {
+                "from": "@body('Parse_JSON_Response')['value']",
+                "where": "@greaterOrEquals(item()['enrolledDateTime'], variables('LastCheckTime'))"
+            }
+        },
+        "Apply_to_each_new_device": {
+            "runAfter": {
+                "Filter_New_Devices": [
+                    "Succeeded"
+                ]
+            },
+            "forEach": "@body('Filter_New_Devices')",
+            "actions": {
+                "Send_an_email_notification": {
+                    "runAfter": {},
+                    "type": "ApiConnection",
+                    "inputs": {
+                        "host": {
+                            "connection": {
+                                "name": "@parameters('$connections')['office365']['connectionId']"
+                            }
+                        },
+                        "method": "post",
+                        "path": "/v2/Mail",
+                        "body": {
+                            "To": "admin@yourdomain.com",
+                            "Subject": "New device enrolled in Intune: @{items('Apply_to_each_new_device')['deviceName']}",
+                            "Body": "<p>A new device has been enrolled in Microsoft Intune:</p><p><strong>Device Name:</strong> @{items('Apply_to_each_new_device')['deviceName']}</p><p><strong>OS:</strong> @{items('Apply_to_each_new_device')['operatingSystem']} @{items('Apply_to_each_new_device')['osVersion']}</p><p><strong>Enrolled:</strong> @{items('Apply_to_each_new_device')['enrolledDateTime']}</p><p><strong>Compliance:</strong> @{items('Apply_to_each_new_device')['complianceState']}</p>",
+                            "Importance": "Normal",
+                            "IsHtml": true
+                        }
+                    }
+                },
+                "Conditional_-_If_non-compliant": {
+                    "runAfter": {
+                        "Send_an_email_notification": [
+                            "Succeeded"
+                        ]
+                    },
+                    "actions": {
+                        "HTTP_Apply_Device_Configuration": {
+                            "runAfter": {},
+                            "type": "Http",
+                            "inputs": {
+                                "method": "POST",
+                                "uri": "http://your-mcp-server:3000/devices/@{items('Apply_to_each_new_device')['id']}/apply-configuration",
+                                "headers": {
+                                    "Content-Type": "application/json"
+                                },
+                                "body": {
+                                    "configurationId": "default-security-profile"
+                                }
+                            }
+                        }
+                    },
+                    "expression": {
+                        "equals": [
+                            "@items('Apply_to_each_new_device')['complianceState']",
+                            "noncompliant"
+                        ]
+                    },
+                    "type": "If"
+                }
+            },
+            "runMode": "Sequential",
+            "type": "Foreach"
+        },
+        "Update_Last_Check_Time": {
+            "runAfter": {
+                "Apply_to_each_new_device": [
+                    "Succeeded"
+                ]
+            },
+            "type": "SetVariable",
+            "inputs": {
+                "name": "LastCheckTime",
+                "value": "@utcNow('yyyy-MM-ddTHH:mm:ss.fffZ')"
+            }
+        }
+    },
+    "outputs": {}
+}
